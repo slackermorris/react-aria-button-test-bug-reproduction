@@ -1,7 +1,8 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Button,
   Dialog,
+  DialogTrigger,
   Modal,
   ModalOverlay,
   TableHeader,
@@ -10,89 +11,99 @@ import {
   Column,
   Cell,
   Heading,
+  Row,
+  type ButtonProps,
 } from "react-aria-components";
 
-export const Bug = () => {
+export function ModalComponent() {
   return (
     <div>
-      {/* <ModalComponent /> */}
-      <ModalInsideTableComponent />
-    </div>
-  );
-};
+      <DialogTrigger>
+        <Button>Delete user…</Button>
+        <ModalOverlay>
+          <Modal>
+            <Dialog role="alertdialog">
+              {({ close }) => (
+                <>
+                  <Heading slot="title">Delete user</Heading>
 
-function ModalComponent() {
-  return (
-    <ModalOverlay
-      isOpen={true}
-      className="fixed inset-0 z-[100] flex justify-center overflow-y-scroll bg-black/25 p-4 pt-12"
-      isDismissable={false}
-      isKeyboardDismissDisabled={false}
-      onOpenChange={() => {}}
-    >
-      <Modal>
-        <Dialog className="flex h-full flex-col justify-center">
-          <Heading slot="title">Modal To Test</Heading>
-          <Button
-            onPress={() => {}}
-            className="text-sm font-semibold leading-6 text-gray-900"
-          >
-            Close
-          </Button>
-        </Dialog>
-      </Modal>
-    </ModalOverlay>
+                  <p>Are you sure you want to delete this user?</p>
+                  <div>
+                    <DialogButton onPress={close}>Cancel</DialogButton>
+                    <DialogButton onPress={close}>Delete</DialogButton>
+                  </div>
+                </>
+              )}
+            </Dialog>
+          </Modal>
+        </ModalOverlay>
+      </DialogTrigger>
+    </div>
   );
 }
 
-function ModalInsideTableComponent() {
+function DialogButton({ className, ...props }: ButtonProps) {
   return (
-    <div className="flex min-w-full flex-col items-end py-2 align-middle sm:px-6 lg:px-8">
-      <ModalComponent />
-      <Table aria-label="table">
-        <TableHeader className="outline-none">
-          <Column>Name</Column>
-        </TableHeader>
-        <TableBody
-          items={[{ key: "1", definition: { name: "test" } }]}
-          className="bg-white"
-        >
-          <Cell>test</Cell>
-        </TableBody>
-      </Table>
-    </div>
+    <Button
+      {...props}
+      className={`inline-flex justify-center rounded-md border border-solid border-transparent px-5 py-2 font-semibold font-[inherit] text-base transition-colors cursor-default outline-hidden focus-visible:ring-2 ring-blue-500 ring-offset-2 ${className}`}
+    />
   );
 }
 
 export function IsolatedButton() {
-  return <Button>Cancel</Button>;
+  return <DialogButton>Cancel</DialogButton>;
 }
 
-export function ButtonInsideModal() {
+const users = [
+  { key: "1", definition: { name: "John Doe" } },
+  { key: "2", definition: { name: "Jane Doe" } },
+];
+
+export function WorkingModalInsideTableComponent() {
   return (
-    <ModalOverlay isOpen={true}>
-      <Modal>
-        <Dialog>
-          <Heading slot="title">Modal To Test</Heading>
-          <IsolatedButton />
-        </Dialog>
-      </Modal>
-    </ModalOverlay>
+    <>
+      <Table aria-label="Users">
+        <TableHeader>
+          <Column isRowHeader>Name</Column>
+          {/* There is an empty column header for the delete user button */}
+          <Column />
+        </TableHeader>
+        <TableBody items={users}>
+          {(user) => (
+            <Row key={user.key}>
+              <Cell>{user.definition.name}</Cell>
+              <Cell>
+                <ModalComponent />
+              </Cell>
+            </Row>
+          )}
+        </TableBody>
+      </Table>
+    </>
   );
 }
 
-export function ModalInsideTableWithButtonInsideModal() {
+export function BrokenModalInsideTableComponent() {
   return (
-    <div>
-      <ButtonInsideModal />
-      <Table aria-label="table">
+    <>
+      <Table aria-label="Users">
         <TableHeader>
-          <Column>Name</Column>
+          <Column isRowHeader>Name</Column>
+          {/* There is an empty column header for the delete user button */}
+          <Column />
         </TableHeader>
-        <TableBody items={[{ key: "1", definition: { name: "test" } }]}>
-          <Cell>test</Cell>
+        <TableBody items={users}>
+          {(user) => (
+            <Row key={user.key}>
+              <Cell>{user.definition.name}</Cell>
+              <Cell>
+                <ModalComponent />
+              </Cell>
+            </Row>
+          )}
         </TableBody>
       </Table>
-    </div>
+    </>
   );
 }

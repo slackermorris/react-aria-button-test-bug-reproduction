@@ -1,12 +1,13 @@
 import React from "react";
 
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 
 import {
-  ButtonInsideModal,
+  ModalComponent,
   IsolatedButton,
-  ModalInsideTableWithButtonInsideModal,
+  WorkingModalInsideTableComponent,
 } from "./Bug";
 
 describe("Bug", () => {
@@ -15,26 +16,54 @@ describe("Bug", () => {
     expect(screen.getByRole("button", { name: "Cancel" })).toBeVisible();
   });
 
-  it.only("shows a button in a modal", () => {
-    render(<ButtonInsideModal />);
-    expect(screen.getByRole("dialog", { name: "Modal To Test" })).toBeVisible();
+  it("shows a button in a modal", async () => {
+    render(<ModalComponent />);
 
-    const dialog = screen.getByRole("dialog", { name: "Modal To Test" });
+    expect(screen.getByRole("button", { name: "Delete user…" })).toBeVisible();
+
+    userEvent.click(screen.getByRole("button", { name: "Delete user…" }));
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("alertdialog", { name: /delete user/i })
+      ).toBeVisible();
+    });
+
+    const dialog = screen.getByRole("alertdialog", { name: /delete user/i });
+    expect(await within(dialog).findAllByRole("button")).toHaveLength(2);
     expect(
-      within(dialog).getByRole("button", { name: "Cancel" })
+      within(dialog).getByRole("button", { name: /cancel/i })
     ).toBeVisible();
   });
 
-  it.only("shows a button in a modal inside a table", () => {
-    render(<ModalInsideTableWithButtonInsideModal />);
+  it("shows a button in a modal inside a table", async () => {
+    render(<WorkingModalInsideTableComponent />);
 
-    expect(screen.getByLabelText("table")).toBeVisible();
+    const table = screen.getByLabelText("Users");
+    expect(table).toBeVisible();
 
-    expect(screen.getByRole("dialog", { name: "Modal To Test" })).toBeVisible();
+    const row = within(table).getByRole("row", { name: /john doe/i });
+    expect(row).toBeVisible();
 
-    const dialog = screen.getByRole("dialog", { name: "Modal To Test" });
+    const deleteUserButton = within(row).getByRole("button", {
+      name: /delete/i,
+    });
+
+    expect(deleteUserButton).toBeVisible();
+
+    userEvent.click(deleteUserButton);
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("alertdialog", { name: /delete user/i })
+      ).toBeVisible();
+    });
+
+    const dialog = screen.getByRole("alertdialog", { name: /delete user/i });
+
+    expect(await within(dialog).findAllByRole("button")).toHaveLength(2);
     expect(
-      within(dialog).getByRole("button", { name: "Cancel" })
+      within(dialog).getByRole("button", { name: /cancel/i })
     ).toBeVisible();
   });
 });
