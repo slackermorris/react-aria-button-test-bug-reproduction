@@ -84,7 +84,36 @@ export function WorkingModalInsideTableComponent() {
   );
 }
 
-export function BrokenModalInsideTableComponent() {
+function ModalComponentWithoutDialogTrigger() {
+  const [isOpen, setIsOpen] = useState(false);
+  return (
+    <>
+      <Button onPress={() => setIsOpen(true)}>Delete user…</Button>
+
+      <div>
+        <ModalOverlay isOpen={isOpen}>
+          <Modal>
+            <Dialog role="alertdialog">
+              {({ close }) => (
+                <>
+                  <Heading slot="title">Delete user</Heading>
+
+                  <p>Are you sure you want to delete this user?</p>
+                  <div>
+                    <DialogButton onPress={close}>Cancel</DialogButton>
+                    <DialogButton onPress={close}>Delete</DialogButton>
+                  </div>
+                </>
+              )}
+            </Dialog>
+          </Modal>
+        </ModalOverlay>
+      </div>
+    </>
+  );
+}
+
+export function ModalInsideTableComponentNoDialogTrigger() {
   return (
     <>
       <Table aria-label="Users">
@@ -98,7 +127,7 @@ export function BrokenModalInsideTableComponent() {
             <Row key={user.key}>
               <Cell>{user.definition.name}</Cell>
               <Cell>
-                <ModalComponent />
+                <ModalComponentWithoutDialogTrigger />
               </Cell>
             </Row>
           )}
