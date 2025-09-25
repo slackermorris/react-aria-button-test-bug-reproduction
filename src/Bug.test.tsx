@@ -6,10 +6,10 @@ import { describe, expect, it } from "vitest";
 
 import {
   IsolatedButton,
-  ModalComponentWithDialogTrigger,
-  TableWithModalWithDialogTrigger,
-  TableWithModalWithoutDialogTriggerButStillManagingShowHideState,
-  TableWithModalWithoutDialogTriggerNotSelfManagingShowHideState,
+  ModalSelfManagingVisibilityWithDialogTrigger,
+  TableWithModalSelfManagingVisibilityWithDialogTrigger,
+  TableWithModalSelfManagingVisibilityWithoutDialogTrigger,
+  TableWithModalNotSelfManagingVisibility,
 } from "./Bug";
 
 describe("reproduction of react-aria bug", () => {
@@ -28,7 +28,7 @@ describe("reproduction of react-aria bug", () => {
   });
 
   it("shows a button in a modal", async () => {
-    render(<ModalComponentWithDialogTrigger />);
+    render(<ModalSelfManagingVisibilityWithDialogTrigger />);
 
     expect(screen.getByRole("button", { name: "Delete user…" })).toBeVisible();
 
@@ -49,7 +49,7 @@ describe("reproduction of react-aria bug", () => {
 
   describe("modal dialog is rendered inside a table", () => {
     it("do buttons render when using a modal self manages showhide state viaDialogTrigger?", async () => {
-      render(<TableWithModalWithDialogTrigger />);
+      render(<TableWithModalSelfManagingVisibilityWithDialogTrigger />);
 
       const table = screen.getByLabelText("Users");
       expect(table).toBeVisible();
@@ -80,9 +80,7 @@ describe("reproduction of react-aria bug", () => {
     });
 
     it("do buttons render when using a modal self manages show/hide state but not managed via DialogTrigger?", async () => {
-      render(
-        <TableWithModalWithoutDialogTriggerButStillManagingShowHideState />
-      );
+      render(<TableWithModalSelfManagingVisibilityWithoutDialogTrigger />);
 
       const table = screen.getByLabelText("Users");
       expect(table).toBeVisible();
@@ -113,9 +111,7 @@ describe("reproduction of react-aria bug", () => {
     });
 
     it("do buttons render when table manages show/hide state?", async () => {
-      render(
-        <TableWithModalWithoutDialogTriggerNotSelfManagingShowHideState />
-      );
+      render(<TableWithModalNotSelfManagingVisibility />);
 
       const table = screen.getByLabelText("Users");
       expect(table).toBeVisible();
