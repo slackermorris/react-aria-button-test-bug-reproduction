@@ -5,20 +5,30 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 
 import {
-  ModalComponent,
   IsolatedButton,
-  WorkingModalInsideTableComponent,
-  ModalInsideTableComponentNoDialogTrigger,
+  ModalComponentWithDialogTrigger,
+  TableWithModalWithDialogTrigger,
+  TableWithModalWithoutDialogTriggerButStillManagingShowHideState,
+  TableWithModalWithoutDialogTriggerNotSelfManagingShowHideState,
 } from "./Bug";
 
-describe("Bug", () => {
+describe("reproduction of react-aria bug", () => {
+  // These tests take follow my debugging process:
+  // 1) Does rendering a button work.
+  // 2) Do buttons render in a modal dialog.
+  // 3) Do buttons render in a modal dialog inside a table when the show/hide state is managed by the modal component (no local state, idiomatic react-aria approach).
+  // 4) Do buttons render in a modal dialog inside a table when the show/hide state is managed by the modal component but no idiomatic react-aria approach.
+  // 5) Do buttons render in a modal dialog inside a table when the show/hide state is not managed by the modal component and is at level of the table (no local state, non-idiomatic react-aria approach).
+
+  // I found that in the most recent version of react-aria (1.12.2), the modal dialog does not render its buttons if the show/hide state is not managed by the modal component itself and it instead managed at the level of the table.
+
   it("shows a button", () => {
     render(<IsolatedButton />);
     expect(screen.getByRole("button", { name: "Cancel" })).toBeVisible();
   });
 
   it("shows a button in a modal", async () => {
-    render(<ModalComponent />);
+    render(<ModalComponentWithDialogTrigger />);
 
     expect(screen.getByRole("button", { name: "Delete user…" })).toBeVisible();
 
@@ -37,65 +47,97 @@ describe("Bug", () => {
     ).toBeVisible();
   });
 
-  it("shows a button in a modal inside a table", async () => {
-    render(<WorkingModalInsideTableComponent />);
+  describe("modal dialog is rendered inside a table", () => {
+    it("do buttons render when using a modal self manages showhide state viaDialogTrigger?", async () => {
+      render(<TableWithModalWithDialogTrigger />);
 
-    const table = screen.getByLabelText("Users");
-    expect(table).toBeVisible();
+      const table = screen.getByLabelText("Users");
+      expect(table).toBeVisible();
 
-    const row = within(table).getByRole("row", { name: /john doe/i });
-    expect(row).toBeVisible();
+      const row = within(table).getByRole("row", { name: /john doe/i });
+      expect(row).toBeVisible();
 
-    const deleteUserButton = within(row).getByRole("button", {
-      name: /delete/i,
-    });
+      const deleteUserButton = within(row).getByRole("button", {
+        name: /delete/i,
+      });
 
-    expect(deleteUserButton).toBeVisible();
+      expect(deleteUserButton).toBeVisible();
 
-    userEvent.click(deleteUserButton);
+      userEvent.click(deleteUserButton);
 
-    await waitFor(() => {
+      await waitFor(() => {
+        expect(
+          screen.getByRole("alertdialog", { name: /delete user/i })
+        ).toBeVisible();
+      });
+
+      const dialog = screen.getByRole("alertdialog", { name: /delete user/i });
+
+      expect(await within(dialog).findAllByRole("button")).toHaveLength(2);
       expect(
-        screen.getByRole("alertdialog", { name: /delete user/i })
+        within(dialog).getByRole("button", { name: /cancel/i })
       ).toBeVisible();
     });
 
-    const dialog = screen.getByRole("alertdialog", { name: /delete user/i });
+    it("do buttons render when using a modal self manages show/hide state but not managed via DialogTrigger?", async () => {
+      render(
+        <TableWithModalWithoutDialogTriggerButStillManagingShowHideState />
+      );
 
-    expect(await within(dialog).findAllByRole("button")).toHaveLength(2);
-    expect(
-      within(dialog).getByRole("button", { name: /cancel/i })
-    ).toBeVisible();
-  });
+      const table = screen.getByLabelText("Users");
+      expect(table).toBeVisible();
 
-  it("does not render buttons in table bound modal dialog because it does not use a DialogTrigger", async () => {
-    render(<ModalInsideTableComponentNoDialogTrigger />);
+      const row = within(table).getByRole("row", { name: /john doe/i });
+      expect(row).toBeVisible();
 
-    const table = screen.getByLabelText("Users");
-    expect(table).toBeVisible();
+      const deleteUserButton = within(row).getByRole("button", {
+        name: /delete/i,
+      });
 
-    const row = within(table).getByRole("row", { name: /john doe/i });
-    expect(row).toBeVisible();
+      expect(deleteUserButton).toBeVisible();
 
-    const deleteUserButton = within(row).getByRole("button", {
-      name: /delete/i,
-    });
+      userEvent.click(deleteUserButton);
 
-    expect(deleteUserButton).toBeVisible();
+      await waitFor(() => {
+        expect(
+          screen.getByRole("alertdialog", { name: /delete user/i })
+        ).toBeVisible();
+      });
 
-    userEvent.click(deleteUserButton);
+      const dialog = screen.getByRole("alertdialog", { name: /delete user/i });
 
-    await waitFor(() => {
+      expect(await within(dialog).findAllByRole("button")).toHaveLength(2);
       expect(
-        screen.getByRole("alertdialog", { name: /delete user/i })
+        within(dialog).getByRole("button", { name: /cancel/i })
       ).toBeVisible();
     });
 
-    const dialog = screen.getByRole("alertdialog", { name: /delete user/i });
+    it("do buttons render when table manages show/hide state?", async () => {
+      render(
+        <TableWithModalWithoutDialogTriggerNotSelfManagingShowHideState />
+      );
 
-    expect(await within(dialog).findAllByRole("button")).toHaveLength(2);
-    expect(
-      within(dialog).getByRole("button", { name: /cancel/i })
-    ).toBeVisible();
+      const table = screen.getByLabelText("Users");
+      expect(table).toBeVisible();
+
+      const row = within(table).getByRole("row", { name: /john doe/i });
+      expect(row).toBeVisible();
+
+      const deleteUserButton = within(row).getByRole("button", {
+        name: /delete/i,
+      });
+      screen.debug(deleteUserButton);
+
+      expect(deleteUserButton).toBeVisible();
+
+      userEvent.click(deleteUserButton);
+
+      // We very much expect the modal dialog to be visible.
+      await waitFor(() => {
+        expect(
+          screen.getByRole("alertdialog", { name: /delete user/i })
+        ).toBeVisible();
+      });
+    });
   });
 });

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState } from 'react';
 import {
   Button,
   Dialog,
@@ -13,9 +13,9 @@ import {
   Heading,
   Row,
   type ButtonProps,
-} from "react-aria-components";
+} from 'react-aria-components';
 
-export function ModalComponent() {
+export function ModalComponentWithDialogTrigger() {
   return (
     <div>
       <DialogTrigger>
@@ -56,11 +56,11 @@ export function IsolatedButton() {
 }
 
 const users = [
-  { key: "1", definition: { name: "John Doe" } },
-  { key: "2", definition: { name: "Jane Doe" } },
+  { key: '1', definition: { name: 'John Doe' } },
+  { key: '2', definition: { name: 'Jane Doe' } },
 ];
 
-export function WorkingModalInsideTableComponent() {
+export function TableWithModalWithDialogTrigger() {
   return (
     <>
       <Table aria-label="Users">
@@ -74,7 +74,7 @@ export function WorkingModalInsideTableComponent() {
             <Row key={user.key}>
               <Cell>{user.definition.name}</Cell>
               <Cell>
-                <ModalComponent />
+                <ModalComponentWithDialogTrigger />
               </Cell>
             </Row>
           )}
@@ -113,7 +113,7 @@ function ModalComponentWithoutDialogTrigger() {
   );
 }
 
-export function ModalInsideTableComponentNoDialogTrigger() {
+export function TableWithModalWithoutDialogTriggerButStillManagingShowHideState() {
   return (
     <>
       <Table aria-label="Users">
@@ -130,6 +130,63 @@ export function ModalInsideTableComponentNoDialogTrigger() {
                 <ModalComponentWithoutDialogTrigger />
               </Cell>
             </Row>
+          )}
+        </TableBody>
+      </Table>
+    </>
+  );
+}
+
+function ModalComponentWithoutDialogTriggerNotSelfManagingShowHideState() {
+  return (
+    <div>
+      <ModalOverlay isOpen={true}>
+        <Modal>
+          <Dialog role="alertdialog">
+            {({ close }) => (
+              <>
+                <Heading slot="title">Delete user</Heading>
+
+                <p>Are you sure you want to delete this user?</p>
+                <div>
+                  <DialogButton onPress={close}>Cancel</DialogButton>
+                  <DialogButton onPress={close}>Delete</DialogButton>
+                </div>
+              </>
+            )}
+          </Dialog>
+        </Modal>
+      </ModalOverlay>
+    </div>
+  );
+}
+
+export function TableWithModalWithoutDialogTriggerNotSelfManagingShowHideState() {
+  const [isDeleteUserModalOpen, setIsDeleteUserModalOpen] = useState(false);
+
+  return (
+    <>
+      <Table aria-label="Users">
+        <TableHeader>
+          <Column isRowHeader>Name</Column>
+          {/* There is an empty column header for the delete user button */}
+          <Column />
+        </TableHeader>
+        <TableBody items={users}>
+          {(user) => (
+            <>
+              <Row key={user.key}>
+                <Cell>{user.definition.name}</Cell>
+                <Cell>
+                  <Button onPress={() => setIsDeleteUserModalOpen(true)}>
+                    Delete user…
+                  </Button>
+                </Cell>
+                {isDeleteUserModalOpen ? (
+                  <ModalComponentWithoutDialogTriggerNotSelfManagingShowHideState />
+                ) : null}
+              </Row>
+            </>
           )}
         </TableBody>
       </Table>
