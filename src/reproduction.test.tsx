@@ -10,7 +10,7 @@ import {
   TableWithModalSelfManagingVisibilityWithDialogTrigger,
   TableWithModalSelfManagingVisibilityWithoutDialogTrigger,
   TableWithModalNotSelfManagingVisibility,
-} from "./Bug";
+} from "./reproduction";
 
 describe("reproduction of react-aria bug", () => {
   // These tests take follow my debugging process:
