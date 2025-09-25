@@ -1,6 +1,6 @@
 {
-  "name": "scratchpad",
-  "description": "A modern frontend template (react, typescript, vite, tailwindcss)",
+  "name": "possible-bug-reproduction",
+  "description": "An attempt to reproduce some weirdness with React Aria buttons not rendering in a modal that is table bound",
   "private": true,
   "version": "0.0.0",
   "type": "module",
