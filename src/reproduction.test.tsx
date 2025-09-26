@@ -10,18 +10,27 @@ import {
   TableWithModalSelfManagingVisibilityWithDialogTrigger,
   TableWithModalSelfManagingVisibilityWithoutDialogTrigger,
   TableWithModalNotSelfManagingVisibility,
+  TableWithNativeButtonModalNotSelfManagingVisibility,
 } from "./reproduction";
 
+/**
+ * The examples below are pretty contrived.
+ *
+ * The real use case involves a table that manages modal visibility because it has a popover with multiple user actions.
+ * See use-case.png for an illustration.
+ *
+ * In reproducing the issue I wanted to determine under what exact conditions it occurs. So, there are a few permutations of rendering a <Button />:
+ * - [PASS] Isolated.
+ * - [PASS] Inside a modal dialog.
+ * - [PASS] Inside a modal dialog which manages its own visibility with a DialogTrigger.
+ * - [PASS] Inside a modal dialog, itself in a table, which manages its own visibility without a DialogTrigger.
+ * - [ERROR] Inside a modal dialog, itself in a table, which does not manage its own visibility.
+ *
+ * The "bug" I found is that <Button />'s do not render in table contained modal dialogs where the visibility of the modal dialog is
+ * managed at the level of the table component.
+ */
+
 describe("reproduction of react-aria bug", () => {
-  // These tests take follow my debugging process:
-  // 1) Does rendering a button work.
-  // 2) Do buttons render in a modal dialog.
-  // 3) Do buttons render in a modal dialog inside a table when the show/hide state is managed by the modal component (no local state, idiomatic react-aria approach).
-  // 4) Do buttons render in a modal dialog inside a table when the show/hide state is managed by the modal component but no idiomatic react-aria approach.
-  // 5) Do buttons render in a modal dialog inside a table when the show/hide state is not managed by the modal component and is at level of the table (no local state, non-idiomatic react-aria approach).
-
-  // I found that in the most recent version of react-aria (1.12.2), the modal dialog does not render its buttons if the show/hide state is not managed by the modal component itself and it instead managed at the level of the table.
-
   it("shows a button", () => {
     render(<IsolatedButton />);
     expect(screen.getByRole("button", { name: "Cancel" })).toBeVisible();
@@ -48,7 +57,7 @@ describe("reproduction of react-aria bug", () => {
   });
 
   describe("modal dialog is rendered inside a table", () => {
-    it("do buttons render when using a modal self manages showhide state viaDialogTrigger?", async () => {
+    it("do buttons render when modal self manages showhide state viaDialogTrigger?", async () => {
       render(<TableWithModalSelfManagingVisibilityWithDialogTrigger />);
 
       const table = screen.getByLabelText("Users");
@@ -79,7 +88,7 @@ describe("reproduction of react-aria bug", () => {
       ).toBeVisible();
     });
 
-    it("do buttons render when using a modal self manages show/hide state but not managed via DialogTrigger?", async () => {
+    it("do buttons render when modal self manages show/hide state but not managed via DialogTrigger?", async () => {
       render(<TableWithModalSelfManagingVisibilityWithoutDialogTrigger />);
 
       const table = screen.getByLabelText("Users");
@@ -122,7 +131,31 @@ describe("reproduction of react-aria bug", () => {
       const deleteUserButton = within(row).getByRole("button", {
         name: /delete/i,
       });
-      screen.debug(deleteUserButton);
+
+      expect(deleteUserButton).toBeVisible();
+
+      userEvent.click(deleteUserButton);
+
+      // We very much expect the modal dialog to be visible.
+      await waitFor(() => {
+        expect(
+          screen.getByRole("alertdialog", { name: /delete user/i })
+        ).toBeVisible();
+      });
+    });
+
+    it("do buttons render when modal uses native buttons and table manages show/hide state?", async () => {
+      render(<TableWithNativeButtonModalNotSelfManagingVisibility />);
+
+      const table = screen.getByLabelText("Users");
+      expect(table).toBeVisible();
+
+      const row = within(table).getByRole("row", { name: /john doe/i });
+      expect(row).toBeVisible();
+
+      const deleteUserButton = within(row).getByRole("button", {
+        name: /delete/i,
+      });
 
       expect(deleteUserButton).toBeVisible();
 
