@@ -16,9 +16,9 @@ import {
 } from "react-aria-components";
 
 /**
- * The examples below are pretty contrived.
+ * TL;DR: When rendered in a table, items (modal dialogs, test elements, etc.) are not rendered when the visibility of the item is managed at the level of the table component and the table rows are generated from render props.
  *
- * TL;DR: When rendered in a table, modal dialogs are not rendered when the visibility of the modal dialog is managed at the level of the table component and the table rows are generated from render props.
+ * The examples below are pretty contrived.
  *
  * The real use case involves a table that manages modal visibility because it has a popover with multiple user actions.
  * See use-case.png for an illustration.
@@ -30,7 +30,7 @@ const users = [
   { key: "2", definition: { name: "Jane Doe" } },
 ];
 
-export function ModalSelfManagingVisibilityWithDialogTrigger() {
+function ModalSelfManagingVisibilityWithDialogTrigger() {
   return (
     <div>
       <DialogTrigger>
@@ -117,6 +117,96 @@ export function TableWithModalNotSelfManagingVisibilityUsingRenderPropsPattern()
               </Row>
             </>
           )}
+        </TableBody>
+      </Table>
+    </>
+  );
+}
+
+export function TableWithTestElementNotSelfManagingVisibilityUsingRenderPropsPattern() {
+  const [showElement, setShowElement] = useState<{
+    [key: string]: boolean;
+  }>({});
+
+  return (
+    <>
+      <Table aria-label="Users">
+        <TableHeader>
+          <Column isRowHeader>Name</Column>
+          {/* There is an empty column header for the delete user button */}
+          <Column />
+          <Column />
+        </TableHeader>
+        <TableBody items={users}>
+          {(user) => (
+            <>
+              <Row key={user.key}>
+                <Cell>{user.definition.name}</Cell>
+                <Cell>
+                  <Button
+                    onPress={() =>
+                      setShowElement({
+                        ...showElement,
+                        [user.key]: true,
+                      })
+                    }
+                  >
+                    Delete user…
+                  </Button>
+                </Cell>
+                <Cell>
+                  {showElement[user.key] ? (
+                    <div key={user.key} data-testid={`${user.key}-element`} />
+                  ) : null}
+                </Cell>
+              </Row>
+            </>
+          )}
+        </TableBody>
+      </Table>
+    </>
+  );
+}
+
+export function TableWithTestElementNotSelfManagingVisibilityNotUsingRenderPropsPattern() {
+  const [showElement, setShowElement] = useState<{
+    [key: string]: boolean;
+  }>({});
+
+  return (
+    <>
+      <Table aria-label="Users">
+        <TableHeader>
+          <Column isRowHeader>Name</Column>
+          {/* There is an empty column header for the delete user button */}
+          <Column />
+          <Column />
+        </TableHeader>
+        <TableBody>
+          {users.map((user) => (
+            <>
+              <Row key={user.key}>
+                <Cell>{user.definition.name}</Cell>
+                <Cell>
+                  <Button
+                    onPress={() =>
+                      setShowElement({
+                        ...showElement,
+                        [user.key]: true,
+                      })
+                    }
+                  >
+                    Delete user…
+                  </Button>
+                </Cell>
+                <Cell>
+                  {showElement[user.key] ? (
+                    <div key={user.key} data-testid={`${user.key}-element`} />
+                  ) : null}
+                </Cell>
+              </Row>
+            </>
+          ))}
         </TableBody>
       </Table>
     </>

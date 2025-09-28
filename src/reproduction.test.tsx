@@ -8,19 +8,21 @@ import {
   TableWithModalSelfManagingVisibilityWithDialogTrigger,
   TableWithModalNotSelfManagingVisibilityUsingRenderPropsPattern,
   TableWithModalNotSelfManagingVisibilityNotUsingRenderPropsPattern,
+  TableWithTestElementNotSelfManagingVisibilityUsingRenderPropsPattern,
+  TableWithTestElementNotSelfManagingVisibilityNotUsingRenderPropsPattern,
 } from "./reproduction";
 
 /**
+ * TL;DR: When rendered in a table, items (modal dialogs, test elements, etc.) are not rendered when the visibility of the item is managed at the level of the table component and the table rows are generated from render props.
+ * 
  * The examples below are pretty contrived.
- *
- * TL;DR: When rendered in a table, modal dialogs are not rendered when the visibility of the modal dialog is managed at the level of the table component and the table rows are generated from render props.
- *
+ * 
  * The real use case involves a table that manages modal visibility because it has a popover with multiple user actions.
  * See use-case.png for an illustration.
  *
  */
 
-describe("reproduction of react-aria bug", () => {
+describe("reproduction of possible react-aria bug", () => {
   it("modal dialog renders when modal self manages visibility state?", async () => {
     render(<TableWithModalSelfManagingVisibilityWithDialogTrigger />);
 
@@ -46,56 +48,110 @@ describe("reproduction of react-aria bug", () => {
   });
 
   describe("when table manages visibility state", () => {
-    it("modal dialog renders when using a render function?", async () => {
-      render(
-        <TableWithModalNotSelfManagingVisibilityUsingRenderPropsPattern />
-      );
+    describe("when using render props pattern", () => {
+      it("modal dialog renders?", async () => {
+        render(
+          <TableWithModalNotSelfManagingVisibilityUsingRenderPropsPattern />
+        );
 
-      const table = screen.getByLabelText("Users");
-      expect(table).toBeVisible();
+        const table = screen.getByLabelText("Users");
+        expect(table).toBeVisible();
 
-      const row = within(table).getByRole("row", { name: /john doe/i });
-      expect(row).toBeVisible();
+        const row = within(table).getByRole("row", { name: /john doe/i });
+        expect(row).toBeVisible();
 
-      const deleteUserButton = within(row).getByRole("button", {
-        name: /delete/i,
+        const deleteUserButton = within(row).getByRole("button", {
+          name: /delete/i,
+        });
+
+        expect(deleteUserButton).toBeVisible();
+
+        userEvent.click(deleteUserButton);
+
+        // We very much expect the modal dialog to be visible.
+        await waitFor(() => {
+          expect(
+            screen.getByRole("alertdialog", { name: /delete user/i })
+          ).toBeVisible();
+        });
       });
 
-      expect(deleteUserButton).toBeVisible();
+      it("non modal dialog test element renders?", async () => {
+        // Prove that conditional rendering any element (not modal dialog specific) does not work when the visibility of the element is managed at the level of the table component and the table rows are generated from render props.
+        render(
+          <TableWithTestElementNotSelfManagingVisibilityUsingRenderPropsPattern />
+        );
 
-      userEvent.click(deleteUserButton);
+        const table = screen.getByLabelText("Users");
+        expect(table).toBeVisible();
 
-      // We very much expect the modal dialog to be visible.
-      await waitFor(() => {
-        expect(
-          screen.getByRole("alertdialog", { name: /delete user/i })
-        ).toBeVisible();
+        const row = within(table).getByRole("row", { name: /john doe/i });
+        expect(row).toBeVisible();
+
+        const deleteUserButton = within(row).getByRole("button", {
+          name: /delete/i,
+        });
+
+        expect(deleteUserButton).toBeVisible();
+
+        userEvent.click(deleteUserButton);
+
+        await waitFor(() => {
+          expect(screen.getByTestId("1-element")).toBeVisible();
+        });
       });
     });
 
-    it("modal dialog renders when not using a render function", async () => {
-      render(
-        <TableWithModalNotSelfManagingVisibilityNotUsingRenderPropsPattern />
-      );
+    describe("when NOT using render props pattern", () => {
+      it("modal dialog renders?", async () => {
+        render(
+          <TableWithModalNotSelfManagingVisibilityNotUsingRenderPropsPattern />
+        );
 
-      const table = screen.getByLabelText("Users");
-      expect(table).toBeVisible();
+        const table = screen.getByLabelText("Users");
+        expect(table).toBeVisible();
 
-      const row = within(table).getByRole("row", { name: /john doe/i });
-      expect(row).toBeVisible();
+        const row = within(table).getByRole("row", { name: /john doe/i });
+        expect(row).toBeVisible();
 
-      const deleteUserButton = within(row).getByRole("button", {
-        name: /delete/i,
+        const deleteUserButton = within(row).getByRole("button", {
+          name: /delete/i,
+        });
+
+        expect(deleteUserButton).toBeVisible();
+
+        userEvent.click(deleteUserButton);
+
+        await waitFor(() => {
+          expect(
+            screen.getByRole("alertdialog", { name: /delete user/i })
+          ).toBeVisible();
+        });
       });
 
-      expect(deleteUserButton).toBeVisible();
+      it("non modal dialog test element renders?", async () => {
+        // Prove that conditional rendering any element (not modal dialog specific) does not work when the visibility of the element is managed at the level of the table component and the table rows are generated from render props.
+        render(
+          <TableWithTestElementNotSelfManagingVisibilityNotUsingRenderPropsPattern />
+        );
 
-      userEvent.click(deleteUserButton);
+        const table = screen.getByLabelText("Users");
+        expect(table).toBeVisible();
 
-      await waitFor(() => {
-        expect(
-          screen.getByRole("alertdialog", { name: /delete user/i })
-        ).toBeVisible();
+        const row = within(table).getByRole("row", { name: /john doe/i });
+        expect(row).toBeVisible();
+
+        const deleteUserButton = within(row).getByRole("button", {
+          name: /delete/i,
+        });
+
+        expect(deleteUserButton).toBeVisible();
+
+        userEvent.click(deleteUserButton);
+
+        await waitFor(() => {
+          expect(screen.getByTestId("1-element")).toBeVisible();
+        });
       });
     });
   });
