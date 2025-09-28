@@ -244,39 +244,6 @@ export function TableWithModalNotSelfManagingVisibilityIteratingWithMapToGenerat
   );
 }
 
-export function TableWithNativeButtonModalNotSelfManagingVisibility() {
-  const [isDeleteUserModalOpen, setIsDeleteUserModalOpen] = useState(false);
-
-  return (
-    <>
-      <Table aria-label="Users">
-        <TableHeader>
-          <Column isRowHeader>Name</Column>
-          {/* There is an empty column header for the delete user button */}
-          <Column />
-        </TableHeader>
-        <TableBody items={users}>
-          {(user) => (
-            <>
-              <Row key={user.key}>
-                <Cell>{user.definition.name}</Cell>
-                <Cell>
-                  <Button onPress={() => setIsDeleteUserModalOpen(true)}>
-                    Delete user…
-                  </Button>
-                </Cell>
-                {isDeleteUserModalOpen ? (
-                  <ModalUsingNativeButtonsNotSelfManagingVisibility />
-                ) : null}
-              </Row>
-            </>
-          )}
-        </TableBody>
-      </Table>
-    </>
-  );
-}
-
 export function TableWithContentNotContainedInACell() {
   return (
     <>
@@ -386,30 +353,6 @@ function ModalNotSelfManagingVisibility() {
                 <div>
                   <DialogButton onPress={close}>Cancel</DialogButton>
                   <DialogButton onPress={close}>Delete</DialogButton>
-                </div>
-              </>
-            )}
-          </Dialog>
-        </Modal>
-      </ModalOverlay>
-    </div>
-  );
-}
-
-function ModalUsingNativeButtonsNotSelfManagingVisibility() {
-  return (
-    <div>
-      <ModalOverlay isOpen={true}>
-        <Modal>
-          <Dialog role="alertdialog">
-            {({ close }) => (
-              <>
-                <Heading slot="title">Delete user</Heading>
-
-                <p>Are you sure you want to delete this user?</p>
-                <div>
-                  <button onClick={close}>Cancel</button>
-                  <button onClick={close}>Delete</button>
                 </div>
               </>
             )}
