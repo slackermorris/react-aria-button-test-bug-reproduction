@@ -117,7 +117,9 @@ export function TableWithModalSelfManagingVisibilityWithoutDialogTrigger() {
 }
 
 export function TableWithModalNotSelfManagingVisibility() {
-  const [isDeleteUserModalOpen, setIsDeleteUserModalOpen] = useState(false);
+  const [isDeleteUserModalOpen, setIsDeleteUserModalOpen] = useState<{
+    [key: string]: boolean;
+  }>({});
 
   return (
     <>
@@ -133,16 +135,109 @@ export function TableWithModalNotSelfManagingVisibility() {
               <Row key={user.key}>
                 <Cell>{user.definition.name}</Cell>
                 <Cell>
-                  <Button onPress={() => setIsDeleteUserModalOpen(true)}>
+                  <Button
+                    onPress={() =>
+                      setIsDeleteUserModalOpen({
+                        ...isDeleteUserModalOpen,
+                        [user.key]: true,
+                      })
+                    }
+                  >
                     Delete user…
                   </Button>
                 </Cell>
-                {isDeleteUserModalOpen ? (
+                {isDeleteUserModalOpen[user.key] ? (
                   <ModalNotSelfManagingVisibility />
                 ) : null}
               </Row>
             </>
           )}
+        </TableBody>
+      </Table>
+    </>
+  );
+}
+export function TableWithModalNotSelfManagingVisibilityAndModalIsContainedInACell() {
+  const [isDeleteUserModalOpen, setIsDeleteUserModalOpen] = useState<{
+    [key: string]: boolean;
+  }>({});
+
+  return (
+    <>
+      <Table aria-label="Users">
+        <TableHeader>
+          <Column isRowHeader>Name</Column>
+          {/* There is an empty column header for the delete user button */}
+          <Column />
+          <Column />
+        </TableHeader>
+        <TableBody items={users}>
+          {(user) => (
+            <>
+              <Row key={user.key}>
+                <Cell>{user.definition.name}</Cell>
+                <Cell>
+                  <Button
+                    onPress={() =>
+                      setIsDeleteUserModalOpen({
+                        ...isDeleteUserModalOpen,
+                        [user.key]: true,
+                      })
+                    }
+                  >
+                    Delete user…
+                  </Button>
+                </Cell>
+                <Cell>
+                  {isDeleteUserModalOpen[user.key] ? (
+                    <ModalNotSelfManagingVisibility />
+                  ) : null}
+                </Cell>
+              </Row>
+            </>
+          )}
+        </TableBody>
+      </Table>
+    </>
+  );
+}
+
+export function TableWithModalNotSelfManagingVisibilityIteratingWithMapToGenerateRows() {
+  const [isDeleteUserModalOpen, setIsDeleteUserModalOpen] = useState<{
+    [key: string]: boolean;
+  }>({});
+
+  return (
+    <>
+      <Table aria-label="Users">
+        <TableHeader>
+          <Column isRowHeader>Name</Column>
+          {/* There is an empty column header for the delete user button */}
+          <Column />
+        </TableHeader>
+        <TableBody>
+          {users.map((user) => (
+            <>
+              <Row key={user.key}>
+                <Cell>{user.definition.name}</Cell>
+                <Cell>
+                  <Button
+                    onPress={() =>
+                      setIsDeleteUserModalOpen({
+                        ...isDeleteUserModalOpen,
+                        [user.key]: true,
+                      })
+                    }
+                  >
+                    Delete user…
+                  </Button>
+                </Cell>
+                {isDeleteUserModalOpen[user.key] ? (
+                  <ModalNotSelfManagingVisibility />
+                ) : null}
+              </Row>
+            </>
+          ))}
         </TableBody>
       </Table>
     </>
@@ -173,6 +268,63 @@ export function TableWithNativeButtonModalNotSelfManagingVisibility() {
                 {isDeleteUserModalOpen ? (
                   <ModalUsingNativeButtonsNotSelfManagingVisibility />
                 ) : null}
+              </Row>
+            </>
+          )}
+        </TableBody>
+      </Table>
+    </>
+  );
+}
+
+export function TableWithContentNotContainedInACell() {
+  return (
+    <>
+      <Table aria-label="Users">
+        <TableHeader>
+          <Column isRowHeader>Name</Column>
+          {/* There is an empty column header for the delete user button */}
+          <Column />
+        </TableHeader>
+        <TableBody items={users}>
+          {(user) => (
+            <>
+              <Row key={user.key}>
+                <Cell>{user.definition.name}</Cell>
+                <Cell>
+                  <Button>Delete user…</Button>
+                </Cell>
+                <div data-testid="modal-with-content-not-contained-in-a-cell" />
+              </Row>
+            </>
+          )}
+        </TableBody>
+      </Table>
+    </>
+  );
+}
+
+export function TableWithContentContainedInACell() {
+  return (
+    <>
+      <Table aria-label="Users">
+        <TableHeader>
+          <Column isRowHeader>Name</Column>
+          {/* There is an empty column header for the delete user button */}
+          <Column />
+          <Column />
+        </TableHeader>
+        <TableBody items={users}>
+          {(user) => (
+            <>
+              <Row key={user.key}>
+                <Cell>{user.definition.name}</Cell>
+                <Cell>
+                  <Button>Delete user…</Button>
+                </Cell>
+                <Cell>
+                  <div data-testid="modal-with-content-not-contained-in-a-cell" />
+                </Cell>
               </Row>
             </>
           )}
