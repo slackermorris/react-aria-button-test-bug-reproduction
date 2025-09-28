@@ -1,6 +1,6 @@
 {
-  "name": "scratchpad",
-  "description": "A modern frontend template (react, typescript, vite, tailwindcss)",
+  "name": "react-aria-table-conditional-invisible-with-render-props",
+  "description": "Reproduction of possible react-aria bug",
   "private": true,
   "version": "0.0.0",
   "type": "module",
