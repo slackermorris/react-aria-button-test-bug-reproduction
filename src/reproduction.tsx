@@ -123,6 +123,100 @@ export function TableWithModalNotSelfManagingVisibilityUsingRenderPropsPattern()
   );
 }
 
+// https://github.com/adobe/react-spectrum/discussions/8939#discussioncomment-14536435
+export function TableWithModalNotSelfManagingVisibilityUsingRenderPropsPatternWithDependencies() {
+  const [isDeleteUserModalOpen, setIsDeleteUserModalOpen] = useState<{
+    [key: string]: boolean;
+  }>({});
+
+  return (
+    <>
+      <Table aria-label="Users">
+        <TableHeader>
+          <Column isRowHeader>Name</Column>
+          {/* There is an empty column header for the delete user button */}
+          <Column />
+        </TableHeader>
+        <TableBody items={users} dependencies={[isDeleteUserModalOpen]}>
+          {(user) => (
+            <>
+              <Row key={user.key}>
+                <Cell>{user.definition.name}</Cell>
+                <Cell>
+                  <Button
+                    onPress={() =>
+                      setIsDeleteUserModalOpen({
+                        ...isDeleteUserModalOpen,
+                        [user.key]: true,
+                      })
+                    }
+                  >
+                    Delete user…
+                  </Button>
+                </Cell>
+                {isDeleteUserModalOpen[user.key] ? (
+                  <ModalNotSelfManagingVisibility />
+                ) : null}
+              </Row>
+            </>
+          )}
+        </TableBody>
+      </Table>
+    </>
+  );
+}
+
+// https://github.com/adobe/react-spectrum/discussions/8939#discussioncomment-14536435
+export function TableWithModalManagingVisibilityInCellUsingRenderPropsPattern() {
+  function ButtonAndModal({ user }: { user: (typeof users)[number] }) {
+    const [isDeleteUserModalOpen, setIsDeleteUserModalOpen] = useState<{
+      [key: string]: boolean;
+    }>({});
+
+    return (
+      <>
+        <Button
+          onPress={() =>
+            setIsDeleteUserModalOpen({
+              ...isDeleteUserModalOpen,
+              [user.key]: true,
+            })
+          }
+        >
+          Delete user…
+        </Button>
+        {isDeleteUserModalOpen[user.key] ? (
+          <ModalNotSelfManagingVisibility />
+        ) : null}
+      </>
+    );
+  }
+
+  return (
+    <>
+      <Table aria-label="Users">
+        <TableHeader>
+          <Column isRowHeader>Name</Column>
+          {/* There is an empty column header for the delete user button */}
+          <Column />
+        </TableHeader>
+        <TableBody items={users}>
+          {(user) => (
+            <>
+              <Row key={user.key}>
+                <Cell>{user.definition.name}</Cell>
+                <Cell>
+                  <ButtonAndModal user={user} />
+                </Cell>
+              </Row>
+            </>
+          )}
+        </TableBody>
+      </Table>
+    </>
+  );
+}
+
 export function TableWithTestElementNotSelfManagingVisibilityUsingRenderPropsPattern() {
   const [showElement, setShowElement] = useState<{
     [key: string]: boolean;
@@ -285,5 +379,24 @@ function ModalNotSelfManagingVisibility() {
         </Modal>
       </ModalOverlay>
     </div>
+  );
+}
+
+function NotUsingRenderPropsPattern() {
+  const [showModal] = useState(true);
+
+  return (
+    <>
+      <Table>
+        <TableBody>
+          {users.map((user) => (
+            <>
+              <Row />
+              {showModal ? <Modal /> : null}
+            </>
+          ))}
+        </TableBody>
+      </Table>
+    </>
   );
 }

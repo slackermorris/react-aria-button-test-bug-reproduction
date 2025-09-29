@@ -10,13 +10,15 @@ import {
   TableWithModalNotSelfManagingVisibilityNotUsingRenderPropsPattern,
   TableWithTestElementNotSelfManagingVisibilityUsingRenderPropsPattern,
   TableWithTestElementNotSelfManagingVisibilityNotUsingRenderPropsPattern,
+  TableWithModalNotSelfManagingVisibilityUsingRenderPropsPatternWithDependencies,
+  TableWithModalManagingVisibilityInCellUsingRenderPropsPattern,
 } from "./reproduction";
 
 /**
  * TL;DR: When rendered in a table, items (modal dialogs, test elements, etc.) are not rendered when the visibility of the item is managed at the level of the table component and the table rows are generated from render props.
- * 
+ *
  * The examples below are pretty contrived.
- * 
+ *
  * The real use case involves a table that manages modal visibility because it has a popover with multiple user actions.
  * See use-case.png for an illustration.
  *
@@ -98,6 +100,60 @@ describe("reproduction of possible react-aria bug", () => {
 
         await waitFor(() => {
           expect(screen.getByTestId("1-element")).toBeVisible();
+        });
+      });
+
+      it("modal dialog renders when dependencies change?", async () => {
+        render(
+          <TableWithModalNotSelfManagingVisibilityUsingRenderPropsPatternWithDependencies />
+        );
+
+        const table = screen.getByLabelText("Users");
+        expect(table).toBeVisible();
+
+        const row = within(table).getByRole("row", { name: /john doe/i });
+        expect(row).toBeVisible();
+
+        const deleteUserButton = within(row).getByRole("button", {
+          name: /delete/i,
+        });
+
+        expect(deleteUserButton).toBeVisible();
+
+        userEvent.click(deleteUserButton);
+
+        // We very much expect the modal dialog to be visible.
+        await waitFor(() => {
+          expect(
+            screen.getByRole("alertdialog", { name: /delete user/i })
+          ).toBeVisible();
+        });
+      });
+
+      it("modal dialog renders when visibility state is managed in a cell?", async () => {
+        render(
+          <TableWithModalManagingVisibilityInCellUsingRenderPropsPattern />
+        );
+
+        const table = screen.getByLabelText("Users");
+        expect(table).toBeVisible();
+
+        const row = within(table).getByRole("row", { name: /john doe/i });
+        expect(row).toBeVisible();
+
+        const deleteUserButton = within(row).getByRole("button", {
+          name: /delete/i,
+        });
+
+        expect(deleteUserButton).toBeVisible();
+
+        userEvent.click(deleteUserButton);
+
+        // We very much expect the modal dialog to be visible.
+        await waitFor(() => {
+          expect(
+            screen.getByRole("alertdialog", { name: /delete user/i })
+          ).toBeVisible();
         });
       });
     });
